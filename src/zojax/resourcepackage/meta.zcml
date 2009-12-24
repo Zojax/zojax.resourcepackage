@@ -1,0 +1,24 @@
+<configure 
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:meta="http://namespaces.zope.org/meta">
+
+  <meta:directives namespace="http://namespaces.zope.org/zojax">
+
+    <meta:complexDirective
+       name="resourcepackage"
+       schema=".zcml.IResourcePackageDirective"
+       handler=".zcml.resourcePackageHandler">
+
+      <meta:subdirective
+	 name="resource"
+	 schema=".zcml.IResourceSubDirective" />
+    </meta:complexDirective>
+
+    <meta:directive
+       name="resourceinclude"
+       schema=".zcml.IResourceIncludeDirective"
+       handler=".zcml.resourceIncludeHandler" />
+
+  </meta:directives>
+
+</configure>

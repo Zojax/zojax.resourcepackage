@@ -1,0 +1,77 @@
+<configure 
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:zcml="http://namespaces.zope.org/zcml"
+   xmlns:tales="http://namespaces.zope.org/tales">
+
+  <include package="zojax.resource" />
+
+  <!-- resourcepackage: tales expression -->
+  <tales:expressiontype
+     name="resourcepackage"
+     handler=".expression.ResourcePackageExpression" />
+
+  <!-- resourcepackage:chameleon expression -->
+  <utility
+     name="resourcepackage"
+     factory=".chameleonexpr.ResourcepackageTranslator"
+     zcml:condition="installed chameleon.zpt" />
+
+  <!-- stylesheet package -->
+  <class class=".stylesheet.StylesheetPackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="stylesheet"
+     component=".stylesheet.packageFactory" />
+
+  <utility
+     name="stylesheet"
+     component=".stylesheet.resourceFactory" />
+
+  <!-- javascript package -->
+  <class class=".javascript.JavascriptPackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="javascript"
+     component=".javascript.packageFactory" />
+
+  <utility
+     name="javascript"
+     component=".javascript.resourceFactory" />
+
+  <!-- inplace package -->
+  <class class=".inplace.InplacePackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="inplace"
+     component=".inplace.packageFactory" />
+
+  <utility
+     name="inplace"
+     component=".inplace.resourceFactory" />
+
+  <!-- resourcepackage traverser -->
+  <adapter
+     name="rspkg"
+     factory=".package.Traversable" />
+
+  <!-- caching headers -->
+  <adapter
+     for=".interfaces.IPackage"
+     provides="zojax.cacheheaders.interfaces.ICacheStrategy"
+     factory=".package.PackageCache" />
+
+  <include file="requesthandler.zcml" />
+
+  <!-- cache -->
+  <include file="cache.zcml" />
+
+</configure>
