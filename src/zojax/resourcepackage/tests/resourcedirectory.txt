@@ -1,0 +1,159 @@
+=====================================
+``zojax:resourceDirectory`` Directive
+=====================================
+
+  >>> from zope import component, interface
+
+  >>> import zojax.resourcepackage
+  >>> from zope.configuration import xmlconfig
+  >>> context = xmlconfig.file('meta.zcml', zojax.resourcepackage)
+
+  >>> from zope.publisher.browser import TestRequest
+  >>> request = TestRequest()
+  >>> response = request.response
+
+We need some temporary directories and files
+
+  >>> import os.path, tempfile
+  >>> dn = tempfile.mkdtemp()
+  >>> os.mkdir(os.path.join(dn, 'subfolder'))
+  >>> open(os.path.join(dn, 'resource1.css'), 'w').write('''\
+  ... /* zrt-cssregistry: */ 
+  ... h1 {
+  ...   color: fontColor;
+  ...   font: fontFamily;
+  ...   background: url('../img1/mybackground.gif');
+  ... }''')
+  >>> open(os.path.join(dn, 'resource2.js'), 'w').write('test')
+  >>> open(os.path.join(dn, 'resource3.css'), 'w').write('test')
+  >>> open(os.path.join(dn, 'resource4.jpg'), 'w').write('test')
+  >>> open(os.path.join(dn, 'resource5.png'), 'w').write('test')
+
+Directive require directory path
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcedirectory
+  ...       name="myresources"
+  ...       directory="%s" />
+  ... </configure>
+  ... ''' %(dn+'123123234534234'), context=context)
+  Traceback (most recent call last):
+  ...
+  ZopeXMLConfigurationError: ...
+
+Now we can register a directory of resources, also we can set
+resource types:
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcedirectory
+  ...       name="myresources"
+  ...       directory="%s"
+  ...	    mapping=".css:zrt .js:fileresource
+  ...                resource3.css:cutom .png:null" />
+  ... </configure>
+  ... ''' %dn, context=context)
+
+  >>> dirresource = component.getAdapter(
+  ...    request, interface.Interface, name='myresources')
+
+Now we can get resource
+
+  >>> dirresource.browserDefault(request)
+  (<function empty at ...>, ())
+
+  >>> resource = dirresource.publishTraverse(request, 'resource1.css')
+  >>> print resource.GET()
+  h1 {
+      color: #11111111;
+      font: Verdana;
+      background: url('../img1/mybackground.gif');
+  }
+
+  >>> print dirresource['resource1.css'].GET()
+  h1 {
+      color: #11111111;
+      font: Verdana;
+      background: url('../img1/mybackground.gif');
+  }
+
+  >>> dirresource.publishTraverse(request, 'unknown.css')
+  Traceback (most recent call last):
+  ...
+  NotFound: ...
+
+  >>> dirresource['unknown.css']
+  Traceback (most recent call last):
+  ...
+  KeyError: 'unknown.css'
+
+
+Types mapping
+-------------
+
+  In 'mapping' we defined that all files with '.css' extension should be 
+custom type, '.js' should be file resource and filename 'test.css' 
+should be file resource, '.png' should be not available
+
+  >>> dirresource.publishTraverse(request, 'resource1.css')
+  <z3c.zrtresource.zrtresource.ZRTFileResource ...>
+
+  >>> dirresource.publishTraverse(request, 'resource2.js')
+  <zope.browserresource.file.FileResource object at ...>
+
+  >>> dirresource.publishTraverse(request, 'resource3.css')
+  <zope.browserresource.file.FileResource object at ...>
+
+  >>> dirresource.publishTraverse(request, 'resource4.jpg')
+  <zope.browserresource.file.FileResource object at ...>
+
+  >>> dirresource.publishTraverse(request, 'resource5.png')
+  Traceback (most recent call last):
+  ...
+  NotFound: Object: ...
+
+Or we can use 'resourceType' subdirective:
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcedirectory
+  ...       name="myresources2"
+  ...       directory="%s">
+  ...     <resourceType file=".css" type="zrt" />
+  ...     <resourceType file=".js" type="fileresource" />
+  ...     <resourceType file=".png" type="null" />
+  ...   </zojax:resourcedirectory>
+  ... </configure>
+  ... ''' %dn, context=context)
+
+  >>> dirresource = component.getAdapter(
+  ...    request, interface.Interface, name='myresources2')
+
+  >>> dirresource.publishTraverse(request, 'resource1.css')
+  <z3c.zrtresource.zrtresource.ZRTFileResource ...>
+
+  >>> dirresource.publishTraverse(request, 'resource2.js')
+  <zope.browserresource.file.FileResource object at ...>
+
+  >>> dirresource.publishTraverse(request, 'resource4.jpg')
+  <zope.browserresource.file.FileResource object at ...>
+
+  >>> dirresource.publishTraverse(request, 'resource5.png')
+  Traceback (most recent call last):
+  ...
+  NotFound: Object: ...
+
+
+We can get sub directories
+
+  >>> subdir = dirresource.publishTraverse(request, 'subfolder')
+
+
+  >>> os.unlink(os.path.join(dn, 'resource1.css'))
+  >>> os.unlink(os.path.join(dn, 'resource2.js'))
+  >>> os.unlink(os.path.join(dn, 'resource3.css'))
+  >>> os.unlink(os.path.join(dn, 'resource4.jpg'))
+  >>> os.unlink(os.path.join(dn, 'resource5.png'))
+  >>> os.rmdir(os.path.join(dn, 'subfolder'))
+  >>> os.rmdir(dn)

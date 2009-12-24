@@ -1,0 +1,401 @@
+===================================
+``zojax:resourcepackage`` Directive
+===================================
+
+  >>> from zope import component, interface
+  >>> from zojax.resourcepackage import interfaces
+
+  >>> import zojax.resourcepackage
+  >>> from zope.configuration import xmlconfig
+  >>> context = xmlconfig.file('meta.zcml', zojax.resourcepackage)
+
+We need register several resources:
+
+  >>> from zope.security.checker import CheckerPublic
+  >>> from zope.browserresource.file import FileResourceFactory
+
+  >>> import tempfile, os, os.path
+  >>> fn1 = tempfile.mktemp('.js')
+  >>> fn2 = tempfile.mktemp('.js')
+  >>> fn3 = tempfile.mktemp('.css')
+  >>> open(fn1, 'w').write('''file1 resource data''')
+  >>> open(fn2, 'w').write('''file2 resource data''')
+  >>> open(fn3, 'w').write('''
+  ... .text-class {font-family: "Lucida Grande", Arial, Helvetica, Sans-Serif;}''')
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <include package="zope.browserresource" file="meta.zcml" />
+  ...   <zojax:resource
+  ...       name="fileresource1.js"
+  ...       file="%s" />
+  ...   <zojax:resource
+  ...       name="fileresource2.js"
+  ...       file="%s" type="file" />
+  ... </configure>
+  ... '''%(fn1, fn2), context=context)
+
+Let's register resource package
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcepackage
+  ...       name="test.js"
+  ...       library="test"
+  ...       type="javascript">
+  ...     <resource path="fileresource1.js" compression='yes' />
+  ...   </zojax:resourcepackage>
+  ... </configure>
+  ... ''', context=context)
+
+Now let's see whether the adapter has been registered:
+
+  >>> from zope.publisher.browser import TestRequest
+  >>> request = TestRequest()
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='test.js')
+
+  >>> resource
+  <zojax.resourcepackage.javascript.JavascriptPackage object at ...>
+
+  >>> print resource.render(request)
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+
+We can add more resources
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcepackage
+  ...       name="test.js"
+  ...       library="test"
+  ...       type="javascript">
+  ...     <resource path="fileresource2.js" />
+  ...   </zojax:resourcepackage>
+  ... </configure>
+  ... ''', context=context)
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='test.js')
+
+  >>> print resource.render(request)
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+  <BLANKLINE>
+  /* http://127.0.0.1/@@/fileresource2.js */
+  file2 resource data
+
+Cache for package
+
+  >>> from zojax.cacheheaders.interfaces import ICacheStrategy
+  >>> cache = ICacheStrategy(resource).__bind__(request)
+  >>> cache.isModified()
+  True
+
+  >>> cache.setNotModifiedHeaders()
+  >>> cache.setCacheHeaders()
+  >>> for key, val in request.response.getHeaders():
+  ...     print key, val
+  X-Powered-By Zope (www.zope.org), Python (www.python.org)
+  Last-Modified Sat, 01 Jan, 2000 01:01:01 GMT
+  Expires Fri, 01 Jan, 2100 01:01:01 GMT
+  Content-Type text/javascript
+  Cache-Control public, max-age=31536000
+
+Now resource package for different layers
+
+  >>> class ILayer1(interface.Interface):
+  ...     pass
+
+  >>> class ILayer2(interface.Interface):
+  ...     pass
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcepackage
+  ...       layer="zojax.resourcepackage.TESTS.ILayer1"
+  ...       name="layer.js"
+  ...       library="layer"
+  ...       type="javascript">
+  ...     <resource path="fileresource1.js" />
+  ...   </zojax:resourcepackage>
+  ...   <zojax:resourcepackage
+  ...       layer="zojax.resourcepackage.TESTS.ILayer2"
+  ...       name="layer.js"
+  ...       library="layer"
+  ...       type="javascript">
+  ...     <resource path="fileresource2.js" />
+  ...   </zojax:resourcepackage>
+  ... </configure>
+  ... ''', context=context)
+
+  >>> request1 = TestRequest()
+  >>> interface.alsoProvides(request1, ILayer1)
+
+  >>> resource = component.getAdapter(
+  ...    request1, interface.Interface, name='layer.js')
+  >>> print resource.render(request1)
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+
+  >>> request2 = TestRequest()
+  >>> interface.alsoProvides(request2, ILayer2)
+  >>> resource = component.getAdapter(
+  ...    request2, interface.Interface, name='layer.js')
+  >>> print resource.render(request2)
+  /* http://127.0.0.1/@@/fileresource2.js */
+  file2 resource data
+
+  >>> request3 = TestRequest()
+  >>> interface.alsoProvides(request3, ILayer1, ILayer2)
+  >>> resource = component.getAdapter(
+  ...    request3, interface.Interface, name='layer.js')
+  >>> print resource.render(request3)
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+  <BLANKLINE>
+  /* http://127.0.0.1/@@/fileresource2.js */
+  file2 resource data
+
+
+Another way
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourceinclude
+  ...       name="test2-file1"
+  ...       library="test2"
+  ...       type="stylesheet"
+  ...       path="fileresource1.js" media="all" />
+  ... </configure>
+  ... ''', context=context)
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='test2.css')
+  >>> print resource.render(TestRequest())
+  @media all {  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data}
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourceinclude
+  ...       name="test2-file2"
+  ...       library="test2"
+  ...       type="stylesheet" media="screen"
+  ...       path="fileresource2.js" />
+  ... </configure>
+  ... ''', context=context)  
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='test2.css')
+  >>> print resource.render(TestRequest())
+  @media all {  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data}
+  <BLANKLINE>
+  @media screen {  /* http://127.0.0.1/@@/fileresource2.js */
+  file2 resource data}
+
+Different types
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourcepackage
+  ...       name="types.js"
+  ...       library="types"
+  ...       type="javascript">
+  ...     <resource path="fileresource1.js" />
+  ...   </zojax:resourcepackage>
+  ...   <zojax:resourcepackage
+  ...       name="types.css"
+  ...       library="types"
+  ...       type="stylesheet">
+  ...     <resource path="fileresource2.js" media="all" />
+  ...   </zojax:resourcepackage>
+  ... </configure>
+  ... ''', context=context)
+
+  >>> request = TestRequest()
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='types.js')
+  >>> print resource.render(request)
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='types.css')
+  >>> print resource.render(request)
+  @media all {  /* http://127.0.0.1/@@/fileresource2.js */
+  file2 resource data}
+
+Test for css
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourceinclude
+  ...       name="testCSS-file3.css"
+  ...       library="test5"
+  ...       type="stylesheet"
+  ...       file="%s" media="all" />
+  ... </configure>
+  ... '''%fn3, context=context)
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='test5.css')
+  >>> print resource.render(request)
+  @media all {  /* http://127.0.0.1/@@/testCSS-file3.css */
+  .text-class {font-family: "Lucida Grande",Arial,Helvetica,Sans-Serif;}}
+
+
+Including resources
+
+  >>> from zojax.resourcepackage import library
+
+  >>> library.include('types')
+  >>> print library.renderResourceLinks(request)
+  <script type="text/javascript" src="http://127.0.0.1/++rspkg++aca5728cfe04d941c34388e2201002cf/types.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://127.0.0.1/++rspkg++b959f93ed4a5a1222015c15fe1103724/types.css" />
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourceinclude
+  ...       name="types-test"
+  ...       library="types"
+  ...       type="inplace"
+  ...       path="fileresource2.js" />
+  ... </configure>
+  ... ''', context=context)  
+
+  >>> library.include('types')
+  >>> print library.renderResourceLinks(request)
+  <script type="text/javascript" src="http://127.0.0.1/++rspkg++aca5728cfe04d941c34388e2201002cf/types.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://127.0.0.1/++rspkg++b959f93ed4a5a1222015c15fe1103724/types.css" />
+  file2 resource data
+
+  >>> from zojax.resourcepackage import requesthandler
+  >>> class ev(object):
+  ...     pass
+
+  >>> ev = ev()
+  >>> ev.request = request
+  >>> ev.response = request.response
+  >>> request.response.setResult('<html>\n<head>\n</head>\n<body></body>\n</html>')
+
+
+  >>> from zope.site.folder import rootFolder
+  >>> from zope.site.hooks import getSite, setSite
+  >>> from zope.site.site import LocalSiteManager
+  >>> root = rootFolder()
+  >>> siteManager = LocalSiteManager(root)
+  >>> root.setSiteManager(siteManager)
+  >>> request._vh_root = root
+  >>> requesthandler.beginTraverse(root, None)
+  >>> library.include('types')
+
+  >>> requesthandler.afterCallHandler(ev)
+  >>> print request.response.consumeBody()
+  <html>
+    <head>
+      <script type="text/javascript" src="http://127.0.0.1/++rspkg++aca5728cfe04d941c34388e2201002cf/types.js"></script>
+      <link rel="stylesheet" type="text/css" href="http://127.0.0.1/++rspkg++b959f93ed4a5a1222015c15fe1103724/types.css" />
+      file2 resource data
+    </head>
+    <body></body>
+  </html>
+
+  >>> request.response.setResult('<html>\n<!--resourcepackages-->\n\n<body></body>\n</html>')
+
+  >>> requesthandler.beginTraverse(root, None)
+  >>> library.include('types')
+
+  >>> requesthandler.afterCallHandler(ev)
+  >>> print request.response.consumeBody()
+  <html>
+    <script type="text/javascript" src="http://127.0.0.1/++rspkg++aca5728cfe04d941c34388e2201002cf/types.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1/++rspkg++b959f93ed4a5a1222015c15fe1103724/types.css" />
+    file2 resource data
+    <body></body>
+  </html>
+  
+  >>> request._vh_root = None
+  >>> setSite(None)
+
+Include resource file
+
+  >>> context = xmlconfig.string('''
+  ... <configure xmlns:zojax="http://namespaces.zope.org/zojax">
+  ...   <zojax:resourceinclude
+  ...       name="types-file.js"
+  ...       library="types-file2"
+  ...       type="javascript"
+  ...       file="%s" standalone="true" />
+  ...   <zojax:resourceinclude
+  ...       name="types-file.css"
+  ...       library="types-file2"
+  ...       type="stylesheet"
+  ...       file="%s" standalone="true" />
+  ... </configure>'''%(fn2, fn1), context=context)
+
+  >>> request = TestRequest()
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='types-file.js')
+  >>> print resource.GET()
+  file2 resource data
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='types-file.js')
+  >>> print resource
+  <zope.browserresource.file.FileResource ...>
+
+  >>> library.include('types-file2')
+  >>> print library.renderResourceLinks(request)
+  <BLANKLINE>
+  <script type="text/javascript" src="http://127.0.0.1/@@/types-file.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://127.0.0.1/@@/types-file.css" />
+
+
+Include source code
+
+  >>> library.includeInplaceSource('Inclue Inplace Source', ('types',))
+  >>> print library.renderResourceLinks(request)
+  <BLANKLINE>
+  <script type="text/javascript" src="http://127.0.0.1/++rspkg++aca5728cfe04d941c34388e2201002cf/types.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://127.0.0.1/++rspkg++b959f93ed4a5a1222015c15fe1103724/types.css" />
+  file2 resource data
+  <BLANKLINE>
+  <BLANKLINE>
+  Inclue Inplace Source
+
+
+Publishing methods
+
+  >>> resource = component.getAdapter(
+  ...    request, interface.Interface, name='types.js')
+
+  >>> resource.publishTraverse(request, '')
+  Traceback (most recent call last):
+  ...
+  NotFound: ...
+
+  >>> resource.browserDefault(request)
+  (<bound method JavascriptPackage.GET of <zojax.resourcepackage.javascript.JavascriptPackage ...>>, ())
+
+  >>> print resource.GET()
+  /* http://127.0.0.1/@@/fileresource1.js */
+  file1 resource data
+
+  >>> request.response.getHeader('Content-Type')
+  'text/javascript'
+
+  >>> resource.HEAD()
+  ''
+  
+  >>> request.response.getHeader('Content-Type')
+  'text/javascript'
+
+
+Remove files
+
+  >>> os.unlink(fn1)
+  >>> os.unlink(fn2)
+  >>> os.unlink(fn3)

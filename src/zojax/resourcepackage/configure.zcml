@@ -1,0 +1,79 @@
+<configure 
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:zcml="http://namespaces.zope.org/zcml"
+   xmlns:tales="http://namespaces.zope.org/tales">
+
+  <!-- resourcepackage: tales expression -->
+  <tales:expressiontype
+     name="resourcepackage"
+     handler=".expression.ResourcePackageExpression" />
+
+  <!-- resourcepackage:chameleon expression -->
+  <utility
+     name="resourcepackage"
+     factory=".chameleonexpr.ResourcepackageTranslator"
+     zcml:condition="installed chameleon.zpt" />
+
+  <!-- stylesheet package -->
+  <class class=".stylesheet.StylesheetPackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="stylesheet"
+     provides=".interfaces.IPackageFactory"
+     component=".stylesheet.StylesheetPackage" />
+
+  <utility
+     name="stylesheet"
+     provides=".interfaces.IPackageResourceFactory"
+     component=".stylesheet.Stylesheet" />
+
+  <!-- javascript package -->
+  <class class=".javascript.JavascriptPackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="javascript"
+     provides=".interfaces.IPackageFactory"
+     component=".javascript.JavascriptPackage" />
+
+  <utility
+     name="javascript"
+     provides=".interfaces.IPackageResourceFactory"
+     component=".javascript.Javascript" />
+
+  <!-- inplace package -->
+  <class class=".inplace.InplacePackage">
+    <allow interface="zope.publisher.interfaces.browser.IBrowserPublisher" />
+    <allow attributes="GET HEAD __call__ link resources type" />
+  </class>
+
+  <utility
+     name="inplace"
+     provides=".interfaces.IPackageFactory"
+     component=".inplace.InplacePackage" />
+
+  <utility
+     name="inplace"
+     provides=".interfaces.IPackageResourceFactory"
+     component=".inplace.Inplace" />
+
+  <!-- resourcepackage traverser -->
+  <adapter
+     name="rspkg"
+     factory=".package.Traversable" />
+
+  <!-- caching headers -->
+  <adapter factory=".package.PackageCache" />
+
+  <!-- render packages to resulted html -->
+  <include file="requesthandler.zcml" />
+
+  <!-- cache -->
+  <include file="cache.zcml" />
+
+</configure>

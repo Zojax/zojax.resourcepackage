@@ -1,0 +1,20 @@
+<configure
+   xmlns="http://namespaces.zope.org/zope"
+   xmlns:zcml="http://namespaces.zope.org/zcml"
+   zcml:condition="installed zojax.cache">
+
+  <!-- update caching tag -->
+  <subscriber
+     handler=".cache.updateResourcePackageTag"
+     for="zojax.skintool.interfaces.ISkinTool
+	  zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+     zcml:condition="installed zojax.skintool" />
+
+  <!-- update styles tag -->
+  <subscriber
+     handler=".cache.updateStylesResourcePackageTag"
+     for="zojax.ui.cssregistry.interfaces.ICSSRegistryConfiglet
+	  zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+     zcml:condition="installed zojax.ui.cssregistry" />
+
+</configure>

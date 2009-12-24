@@ -1,0 +1,11 @@
+<configure xmlns="http://namespaces.zope.org/zope">
+
+  <subscriber handler=".requesthandler.beginTraverse" />
+
+  <subscriber handler=".requesthandler.afterCallHandler" />
+
+  <subscriber
+     for="zojax.cacheheaders.interfaces.IAfterExceptionCallEvent"
+     handler=".requesthandler.afterCallHandler" />
+
+</configure>
