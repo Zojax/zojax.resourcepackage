@@ -16,8 +16,8 @@
 $Id$
 """
 from zope import component
-from zope.component.interfaces import ISite
-from zope.site.hooks import getSite, setSite
+from zope.app.component.interfaces import ISite
+from zope.app.component.hooks import getSite, setSite
 from zope.app.publication.interfaces import IBeforeTraverseEvent
 
 from zojax.resourcepackage import library

@@ -17,9 +17,9 @@ $Id$
 """
 from threading import local
 from zope import interface
-from zope.site.hooks import getSite
 from zope.traversing.browser import absoluteURL
 from zope.component import queryUtility, queryAdapter
+from zope.app.component.hooks import getSite
 
 from interfaces import IPackage, ILibrary
 

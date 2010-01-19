@@ -3,6 +3,8 @@
    xmlns:zcml="http://namespaces.zope.org/zcml"
    xmlns:tales="http://namespaces.zope.org/tales">
 
+  <include package="zojax.resource" />
+
   <!-- resourcepackage: tales expression -->
   <tales:expressiontype
      name="resourcepackage"
@@ -22,13 +24,11 @@
 
   <utility
      name="stylesheet"
-     provides=".interfaces.IPackageFactory"
-     component=".stylesheet.StylesheetPackage" />
+     component=".stylesheet.packageFactory" />
 
   <utility
      name="stylesheet"
-     provides=".interfaces.IPackageResourceFactory"
-     component=".stylesheet.Stylesheet" />
+     component=".stylesheet.resourceFactory" />
 
   <!-- javascript package -->
   <class class=".javascript.JavascriptPackage">
@@ -38,13 +38,11 @@
 
   <utility
      name="javascript"
-     provides=".interfaces.IPackageFactory"
-     component=".javascript.JavascriptPackage" />
+     component=".javascript.packageFactory" />
 
   <utility
      name="javascript"
-     provides=".interfaces.IPackageResourceFactory"
-     component=".javascript.Javascript" />
+     component=".javascript.resourceFactory" />
 
   <!-- inplace package -->
   <class class=".inplace.InplacePackage">
@@ -54,13 +52,11 @@
 
   <utility
      name="inplace"
-     provides=".interfaces.IPackageFactory"
-     component=".inplace.InplacePackage" />
+     component=".inplace.packageFactory" />
 
   <utility
      name="inplace"
-     provides=".interfaces.IPackageResourceFactory"
-     component=".inplace.Inplace" />
+     component=".inplace.resourceFactory" />
 
   <!-- resourcepackage traverser -->
   <adapter
@@ -68,9 +64,11 @@
      factory=".package.Traversable" />
 
   <!-- caching headers -->
-  <adapter factory=".package.PackageCache" />
+  <adapter
+     for=".interfaces.IPackage"
+     provides="zojax.cacheheaders.interfaces.ICacheStrategy"
+     factory=".package.PackageCache" />
 
-  <!-- render packages to resulted html -->
   <include file="requesthandler.zcml" />
 
   <!-- cache -->

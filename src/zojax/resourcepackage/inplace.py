@@ -16,11 +16,11 @@
 $Id$
 """
 from zope.component import getMultiAdapter
-from zope.site.hooks import getSite
+from zope.app.component.hooks import getSite
 from zope.traversing.browser.interfaces import IAbsoluteURL
 
-from package import Package
-from resource import Resource
+from package import Package, PackageFactory
+from resource import Resource, ResourceFactory
 
 
 class Inplace(Resource):
@@ -35,3 +35,7 @@ class InplacePackage(Package):
 
     def link(self, request, siteUrl):
         return self.render(request)
+
+
+packageFactory = PackageFactory(InplacePackage)
+resourceFactory = ResourceFactory(Inplace)

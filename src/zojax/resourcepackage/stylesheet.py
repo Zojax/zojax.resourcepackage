@@ -16,12 +16,12 @@
 $Id$
 """
 from zope.component import getMultiAdapter
-from zope.site.hooks import getSite
+from zope.app.component.hooks import getSite
 from zope.traversing.browser.interfaces import IAbsoluteURL
 
 from packer import CSSPacker
-from package import Package
-from resource import Resource
+from package import Package, PackageFactory
+from resource import Resource, ResourceFactory
 
 packers = {'full': CSSPacker('full'),
            'save': CSSPacker('save')}
@@ -74,3 +74,7 @@ class StylesheetPackage(Package):
 
     def render(self, request):
         return super(StylesheetPackage, self).render(request)
+
+
+packageFactory = PackageFactory(StylesheetPackage)
+resourceFactory = ResourceFactory(Stylesheet)

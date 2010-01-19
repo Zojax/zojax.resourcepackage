@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-version = '0'
+version = '1.5.3'
 
 
 setup(name='zojax.resourcepackage',
@@ -45,13 +45,12 @@ setup(name='zojax.resourcepackage',
         'Framework :: Zope3'],
       author='Nikolay Kim',
       author_email='fafhrd91@gmail.com',
-      url='http://pypi.python.org/pypi/zojax.resourcepackage/',
+      url='http://zojax.net/',
       license='ZPL 2.1',
       packages=find_packages('src'),
       package_dir = {'':'src'},
       namespace_packages=['zojax'],
       install_requires = ['setuptools',
-                          'zope.site',
                           'zope.tales',
                           'zope.schema',
                           'zope.component',
@@ -59,11 +58,10 @@ setup(name='zojax.resourcepackage',
                           'zope.publisher',
                           'zope.traversing',
                           'zope.configuration',
-                          'zope.browserresource',
-                          'zope.app.publication',
-                          'zojax.cssregistry',
+                          'zope.app.component',
+                          'zope.app.publisher',
+                          'zojax.resource',
                           'zojax.cacheheaders',
-                          'z3c.zrtresource',
                           ],
       extras_require = dict(test=['zope.traversing',
                                   'zope.app.testing',

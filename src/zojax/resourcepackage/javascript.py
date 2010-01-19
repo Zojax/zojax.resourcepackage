@@ -16,12 +16,12 @@
 $Id$
 """
 from zope.component import getMultiAdapter
-from zope.site.hooks import getSite
+from zope.app.component.hooks import getSite
 from zope.traversing.browser.interfaces import IAbsoluteURL
 
 from packer import JavascriptPacker
-from package import Package
-from resource import Resource
+from package import Package, PackageFactory
+from resource import Resource, ResourceFactory
 
 packer = JavascriptPacker('save')
 
@@ -64,3 +64,7 @@ class JavascriptPackage(Package):
 
     def render(self, request):
         return super(JavascriptPackage, self).render(request)
+
+
+packageFactory = PackageFactory(JavascriptPackage)
+resourceFactory = ResourceFactory(Javascript)

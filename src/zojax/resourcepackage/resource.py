@@ -18,16 +18,20 @@ $Id$
 from zope import interface
 from zope.interface import directlyProvides, directlyProvidedBy
 
-from utils import traverse
+from zojax.resource.interfaces import IResource
+
+from utils import traverse, log_exc
 from interfaces import IPackageResource, IPackageResourceFactory
 
 
 class Resource(object):
     interface.implements(IPackageResource)
-    interface.classImplements(IPackageResourceFactory)
 
     def __init__(self, name, path, resource, standalone=False, order=999, **kw):
-        self._url = path
+        if path.startswith('++resource++'):
+            self._url = path[12:]
+        else:
+            self._url = path
 
         if isinstance(path, basestring):
             path = path.split('/')
@@ -73,7 +77,25 @@ class Resource(object):
         if resource is None:
             return u''
 
-        return traverse(path, request).GET()
+        gresource = IResource(resource, None)
+        if gresource is not None:
+            try:
+                return gresource.render(request)
+            except Exception, err:
+                log_exc(str(err))
+                raise
+        else:
+            return traverse(path, request).GET()
 
     def __call__(self, request, package):
         return self
+
+
+class ResourceFactory(object):
+    interface.implements(IPackageResourceFactory)
+
+    def __init__(self, factory):
+        self.factory = factory
+
+    def __call__(self, *args, **kw):
+        return self.factory(*args, **kw)

@@ -24,13 +24,13 @@ from zope.datetime import rfc1123_date
 from zope.datetime import weekday_abbr, monthname
 from zope.datetime import time as timeFromDateTimeString
 
-from zope.site.hooks import getSite
-from zope.component.interfaces import ISite
+from zope.app.component.hooks import getSite
+from zope.app.component.interfaces import ISite
 from zope.traversing.browser import absoluteURL
 from zope.traversing.interfaces import ITraversable
 from zope.publisher.interfaces import NotFound
 from zope.publisher.interfaces.browser import IBrowserPublisher
-from zope.browserresource.resource import Resource
+from zope.app.publisher.browser.resource import Resource
 
 from zojax.cacheheaders.interfaces import ICacheStrategy
 
@@ -40,7 +40,6 @@ from interfaces import \
 
 class Package(Resource):
     interface.implements(IPackage, IBrowserPublisher)
-    interface.classImplements(IPackageFactory)
 
     type = ''
     content_type = 'text/*'
@@ -105,6 +104,17 @@ class Package(Resource):
         response = request.response
         response.setHeader('Content-Type', self.content_type)
         return ''
+
+
+class PackageFactory(object):
+    """ Stylesheet package factory """
+    interface.implements(IPackageFactory)
+
+    def __init__(self, factory):
+        self.factory = factory
+
+    def __call__(self, name, order, title):
+        return self.factory(name, order, title)
 
 
 class PackageCache(object):

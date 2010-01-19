@@ -15,6 +15,7 @@
 
 $Id$
 """
+import logging, sys
 from zope.component import queryAdapter
 
 
@@ -33,3 +34,8 @@ def traverse(path, request):
         resource = resource.get(name)
 
     return resource
+
+
+def log_exc(msg='', subsystem='zojax.resourcepakcage'):
+    log = logging.getLogger(subsystem)
+    log.log(logging.ERROR, msg, exc_info=sys.exc_info())

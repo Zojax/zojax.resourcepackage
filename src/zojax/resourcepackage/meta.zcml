@@ -19,21 +19,6 @@
        schema=".zcml.IResourceIncludeDirective"
        handler=".zcml.resourceIncludeHandler" />
 
-    <meta:directive
-       name="resource"
-       schema=".resourcezcml.IResourceDirective"
-       handler=".resourcezcml.resourceDirective" />
-
-    <meta:complexDirective
-       name="resourcedirectory"
-       schema=".resourcezcml.IResourceDirectoryDirective"
-       handler=".resourcezcml.ResourceDirectoryDirective">
-
-      <meta:subdirective
-         name="resourceType"
-         schema=".resourcezcml.IResourceDirectoryResourceType" />
-    </meta:complexDirective>
-
   </meta:directives>
 
 </configure>

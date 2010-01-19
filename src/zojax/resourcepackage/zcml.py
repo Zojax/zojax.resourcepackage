@@ -26,9 +26,9 @@ from zope.configuration.fields import Path, Tokens, GlobalObject
 from zope.configuration.exceptions import ConfigurationError
 from zope.security.checker import CheckerPublic, NamesChecker
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
-from zope.browserresource.file import FileResourceFactory
-from zope.browserresource.metaconfigure import allowed_names
-from zope.browserresource.interfaces import IResourceFactoryFactory
+from zope.app.publisher.browser.resourcemeta import allowed_names
+
+from zojax.resource.interfaces import IResourceFactoryType
 
 from library import Library
 from interfaces import ILibrary, IPackage, IPackageFactory
@@ -311,13 +311,13 @@ def resourceInclude(name, layer, library, type,
 
             if file:
                 if filetype:
-                    rfactory = queryUtility(IResourceFactoryFactory, filetype)
+                    rfactory = queryUtility(IResourceFactoryType, name=filetype)
                 else:
                     filetype = os.path.splitext(os.path.normcase(name))[1][1:]
-                    rfactory = queryUtility(IResourceFactoryFactory, filetype)
+                    rfactory = queryUtility(IResourceFactoryType, name=filetype)
 
                 if rfactory is None:
-                    rfactory = FileResourceFactory
+                    rfactory = getUtility(IResourceFactoryType)
 
                 checker = NamesChecker(allowed_names, CheckerPublic)
                 resourceFactory = rfactory(file, checker, name)
