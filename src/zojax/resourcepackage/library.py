@@ -76,8 +76,10 @@ def include(library):
 
 def includeInplaceSource(source, required=()):
     for lib in required:
-        includes.libraries.append(lib)
-    includes.sources.append(source)
+        if lib not in includes.libraries:
+            includes.libraries.append(lib)
+    if source not in includes.sources:
+        includes.sources.append(source)
 
 
 def processLibrary(library, ids, objects):
