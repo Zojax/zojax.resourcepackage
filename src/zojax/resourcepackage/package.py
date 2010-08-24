@@ -57,12 +57,12 @@ class Package(Resource):
         interface.alsoProvides(clone, IBoundPackage)
         return clone
 
-    def __hash__(self):
+    def __stringhash__(self):
         return md5.md5(self.render(self.request)).hexdigest()
 
     def __call__(self):
         return u'%s/++rspkg++%s/%s'%(
-            absoluteURL(getSite(), self.request),self.__hash__(),self.__name__)
+            absoluteURL(getSite(), self.request),self.__stringhash__(),self.__name__)
 
     def resources(self, request):
         resources = []
@@ -74,7 +74,7 @@ class Package(Resource):
 
     def publishTraverse(self, request, name):
         '''See interface IBrowserPublisher'''
-        if name == self.__hash__():
+        if name == self.__stringhash__():
             return self
 
         raise NotFound(None, name)

@@ -42,7 +42,7 @@ def PackageCacheId(instance):
     return u'resourcepackage:%s:etag'%instance.__name__
 
 
-Package.__hash__ = cache(PackageCacheId, ResourcePackageTag)(Package.__hash__)
+Package.__stringhash__ = cache(PackageCacheId, ResourcePackageTag)(Package.__stringhash__)
 
 JavascriptPackage.render = cache(
     PackageId, ResourcePackageTag)(JavascriptPackage.render)
