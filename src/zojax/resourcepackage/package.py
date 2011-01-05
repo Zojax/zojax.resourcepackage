@@ -144,8 +144,8 @@ class PackageCache(object):
         response = self.response
 
         response.setHeader('Cache-Control', 'public, max-age=31536000')
-        response.setHeader('Expires', u"Fri, 01 Jan, 2100 01:01:01 GMT")
-        response.setHeader('Last-Modified', u"Sat, 01 Jan, 2000 01:01:01 GMT")
+        response.setHeader('Expires', u"Fri, 01 Jan 2100 01:01:01 GMT")
+        response.setHeader('Last-Modified', u"Sat, 01 Jan 2000 01:01:01 GMT")
 
 
 class Traversable(object):
