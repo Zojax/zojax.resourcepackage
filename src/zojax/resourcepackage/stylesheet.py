@@ -38,7 +38,7 @@ class Stylesheet(Resource):
         self.compression = compression
         self.resource_path = '@@/%s'%(path or name)
 
-    def render(self, request, compress=True):
+    def render(self, request, compress=False):
         content = super(Stylesheet, self).render(request, compress)
 
         if compress:
