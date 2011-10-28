@@ -19,12 +19,13 @@ from zope.component import getMultiAdapter
 from zope.app.component.hooks import getSite
 from zope.traversing.browser.interfaces import IAbsoluteURL
 
-from packer import CSSPacker
+from packer import CSSPacker, CSSMinPacker
 from package import Package, PackageFactory
 from resource import Resource, ResourceFactory
 
-packers = {'full': CSSPacker('full'),
-           'save': CSSPacker('save')}
+packers = {'medium': CSSPacker('full'),
+           'save': CSSPacker('save'),
+           'full': CSSMinPacker()}
 
 
 class Stylesheet(Resource):
@@ -38,7 +39,7 @@ class Stylesheet(Resource):
         self.compression = compression
         self.resource_path = '@@/%s'%(path or name)
 
-    def render(self, request, compress=False):
+    def render(self, request, compress=True):
         content = super(Stylesheet, self).render(request, compress)
 
         if compress:

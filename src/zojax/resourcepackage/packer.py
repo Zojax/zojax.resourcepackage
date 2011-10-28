@@ -1,4 +1,5 @@
 import re
+from cssmin import cssmin
 
 
 class KeywordMapper:
@@ -386,3 +387,11 @@ class CSSPacker(Packer):
 
 ## if __name__=='__main__':
     ## run()
+
+class CSSMinPacker(Packer):
+    """
+    A filter that utilizes Zachary Voase's Python port of
+    the YUI CSS compression algorithm: http://pypi.python.org/pypi/cssmin/
+    """
+    def pack(self, input):
+        return cssmin(input)

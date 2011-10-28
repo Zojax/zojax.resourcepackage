@@ -168,7 +168,7 @@ Another way
   ...       type="stylesheet" media="screen"
   ...       path="fileresource2.js" />
   ... </configure>
-  ... ''', context=context)  
+  ... ''', context=context)
 
   >>> resource = component.getAdapter(
   ...    request, interface.Interface, name='test2.css')
@@ -227,7 +227,7 @@ Test for css
   ...    request, interface.Interface, name='test5.css')
   >>> print resource.render(request)
   @media all {  /* http://127.0.0.1/@@/testCSS-file3.css */
-  .text-class {font-family: "Lucida Grande",Arial,Helvetica,Sans-Serif;}}
+  .text-class{font-family:"Lucida Grande",Arial,Helvetica,Sans-Serif}}
 
 
 Including resources
@@ -247,7 +247,7 @@ Including resources
   ...       type="inplace"
   ...       path="fileresource2.js" />
   ... </configure>
-  ... ''', context=context)  
+  ... ''', context=context)
 
   >>> library.include('types')
   >>> print library.renderResourceLinks(request)
@@ -325,7 +325,7 @@ Publishing methods
 
   >>> resource.HEAD()
   ''
-  
+
   >>> request.response.getHeader('Content-Type')
   'text/javascript'
 
